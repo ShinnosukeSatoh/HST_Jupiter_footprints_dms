@@ -33,7 +33,7 @@ plt.rcParams.update({'font.sans-serif': "Arial",
 
 # %% TOGGLES
 JRM_NUM = 'JRM33'                           # 'JRM09' or 'JRM33'
-SATELLITE = ['AM', 'IO', 'EU', 'GA']        # 'AM', 'IO', 'EU', 'GA'
+SATELLITE = ['AM', 'IO', 'EU']              # 'AM', 'IO', 'EU', 'GA'
 
 
 # %% DATA LOADING FOR COEFFICIENTS AND POSITION OF SATELLITE FOOTPRINTS
