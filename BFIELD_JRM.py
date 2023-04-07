@@ -22,18 +22,20 @@ import time
 
 
 # %% matplotlib フォント設定
-plt.rcParams.update({'font.sans-serif': "Arial",
-                     'font.family': "sans-serif",
+fontname = 'Nimbus Sans'
+plt.rcParams.update({'font.sans-serif': fontname,
+                     'font.family': 'sans-serif',
                      'mathtext.fontset': 'custom',
-                     'mathtext.rm': 'Arial',
-                     'mathtext.it': 'Arial:italic',
-                     'mathtext.bf': 'Arial:italic:bold'
+                     'mathtext.rm': fontname,
+                     'mathtext.it': fontname+':italic',
+                     # 'mathtext.bf': 'Nimbus Sans:italic:bold',
+                     'mathtext.bf': fontname+':bold'
                      })
 
 
 # %% TOGGLES
 JRM_NUM = 'JRM33'                           # 'JRM09' or 'JRM33'
-SATELLITE = ['AM', 'IO', 'EU']              # 'AM', 'IO', 'EU', 'GA'
+SATELLITE = ['AM', 'IO', 'EU', 'GA']              # 'AM', 'IO', 'EU', 'GA'
 
 
 # %% DATA LOADING FOR COEFFICIENTS AND POSITION OF SATELLITE FOOTPRINTS
@@ -47,7 +49,7 @@ satellite_Sftp = np.loadtxt(
     'data/'+JRM_NUM+'/satellite_foot_S.txt', skiprows=3
 )
 satellite_name = ['AM', 'IO', 'EU', 'GA']
-satellite_color = ['#888888', '#000000', '#FE0000', '#888888']
+satellite_color = ['#888888', '#000000', '#f24875', '#888888']
 satellite_marker = ['o', '*', 's', 'd']
 satellite_index = [satellite_name.index(i) for i in (SATELLITE)]
 
@@ -97,11 +99,33 @@ def main():
     # PLOT
     """
     cmapBR = generate_cmap(
-        ['#6692F7', '#87ADF9', '#A5C9FA', '#DAFEFE', '#FFFEE3', '#FAE3CB', '#F6C7B0', '#F2AA94', '#EF8C76'])
+        ['#6579FE', '#819AFE', '#A0BBFF', '#BFDDFF', '#DCFFFF',
+            '#FFFFDB', '#FFDEBF', '#FEBBA3', '#FE9981', '#FE7864']
+    )
     """
-    fontsize = 18
+    midnights = generate_cmap(
+        ['#000000',
+         '#272367',
+         '#3f5597',
+         '#83afba',
+         # '#d3e7f4',
+         '#FFFFFF']
+    )
+
+    fearlessTV = generate_cmap(
+        ['#171007',
+         '#433016',
+         '#95743b',
+         '#c3a24f',
+         '#ffffff']
+    )
+
+    cmap = midnights
+
+    fontsize = 20
     fig, ax = plt.subplots(figsize=(7.5, 4), dpi=150)
-    ax.set_title(JRM_NUM, fontsize=fontsize, weight='bold', loc='left')
+    ax.set_title('$\\bf{'+str(JRM_NUM)+'}$'+'\n'+'Footprints', fontsize=fontsize, linespacing=0.85,
+                 color='#3D4A7A', loc='left')
     ax.set_xlim(0, 360)
     ax.invert_xaxis()
     ax.set_xticks([0, 90, 180, 270, 360])
@@ -110,12 +134,17 @@ def main():
     ax.set_yticklabels(['-60', '-30', '0', '30', '60'], fontsize=fontsize)
     ax.set_xlabel('System III long. [deg]', fontsize=fontsize)
     ax.set_ylabel('Latitude [deg]', fontsize=fontsize)
+    ax.tick_params(axis="x", which='major', direction='in')
+    ax.tick_params(axis="x", which='minor', direction='inout')
+    ax.tick_params(axis="y", which='major', direction='in')
+    ax.tick_params(axis="y", which='minor', direction='inout')
 
     for i in satellite_index:
         latidx = 2*i+1
         s3idx = latidx+1
-        ax.scatter(satellite_Nftp[:, s3idx],
-                   satellite_Nftp[:, latidx],
+
+        ax.scatter(satellite_Nftp[:-1, s3idx],
+                   satellite_Nftp[:-1, latidx],
                    label=satellite_name[i],
                    s=9,
                    marker=satellite_marker[i],
@@ -123,8 +152,8 @@ def main():
                    facecolor='none',
                    zorder=10-i
                    )
-        ax.scatter(satellite_Sftp[:, s3idx],
-                   satellite_Sftp[:, latidx],
+        ax.scatter(satellite_Sftp[:-1, s3idx],
+                   satellite_Sftp[:-1, latidx],
                    label='_nolegend_',
                    s=9,
                    marker=satellite_marker[i],
@@ -134,14 +163,17 @@ def main():
                    )
 
     cs = ax.pcolormesh(wlong_arr, lat_arr, B_abs_arr,
-                       cmap='YlGnBu_r', zorder=0.1
+                       # cmap='YlGnBu_r',
+                       cmap=cmap,
+                       vmin=0,
+                       zorder=0.1
                        )
     pp = fig.colorbar(cs)
     pp.ax.set_title(' ', fontsize=fontsize)
     pp.set_label('Intensity [G]', fontsize=fontsize)
     pp.ax.tick_params(labelsize=fontsize)
     ax.legend(markerscale=2, loc='upper right',
-              bbox_to_anchor=(1, 1.12),
+              bbox_to_anchor=(1, 1.14),
               fontsize=fontsize*0.5, ncol=4, frameon=False)
     fig.tight_layout()
 
@@ -159,7 +191,7 @@ def B_JRM(lat, wlong):
     `wlong` ... <float> West-longitude of the point [deg] \\
 
     ### Returns
-    <ndarray, shape (3,)> Magnetic field (B_r, B_theta, B_phi)
+    <ndarray, shape (3,)> Magnetic field (B_r, B_theta, B_phi) [G]
     """
 
     theta = np.radians(90-lat)      # [rad]
@@ -251,7 +283,9 @@ def generate_cmap(colors):
     color_list = []
     for v, c in zip(values, colors):
         color_list.append((v / vmax, c))
-    return LinearSegmentedColormap.from_list('custom_cmap', color_list)
+
+    cmap = LinearSegmentedColormap.from_list('custom_cmap', color_list)
+    return cmap
 
 
 # %% EXECUTE
