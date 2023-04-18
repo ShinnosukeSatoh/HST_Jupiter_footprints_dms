@@ -1,13 +1,15 @@
-""" B_JRM33.py
+""" B_equator.py
 
-Created on Mar 18, 2023
+Created on Apr 12, 2023
 @author: Shin Satoh
 
 Description:
+This class is written specifically for calculating and locating
+the magnetic equator of the Jovian magnetosphere.
 
 
 Version
-1.0.0 (Apr 7, 2023)
+1.0.0 (Apr 12, 2023)
 
 """
 
@@ -40,7 +42,7 @@ me = 9.1E-31            # MASS OF ELECTRON [kg]
 e = (1.6E-19)           # CHARGE OF ELECTRON [C]
 
 
-class B():
+class SUM():
     def __init__(self):
         return None
 
@@ -67,14 +69,6 @@ class B():
         dVdr = 0
         dVdr_n = np.zeros(NN)
 
-        # theta成分
-        dVdtheta = 0
-        dVdtheta_n = np.zeros(NN)
-
-        # phi成分
-        dVdphi = 0
-        dVdphi_n = np.zeros(NN)
-
         for i in range(NN):
             n = i+1                              # INDEX n
             m = np.arange(0, n+1, 1, dtype=int)  # INDEX m
@@ -94,33 +88,14 @@ class B():
             h_nm[1:] = jrm_coef[h_s:h_e+1]       # m >= 1に値を格納する
 
             # INDEX m方向に和をとる
-            dVdr_n[i] = (-1-n)*(RJ/rs)**(n+2) * np.sum(
-                P_nm*(g_nm*np.cos(m*phi) + h_nm*np.sin(m*phi))
-            )
-
-            # INDEX m方向に和をとる
-            dVdtheta_n[i] = (RJ/rs)**(n+2) * np.sum(
-                dP_nm*(g_nm*np.cos(m*phi) + h_nm*np.sin(m*phi))
-            )
-
-            # INDEX m方向に和をとる
-            dVdphi_n[i] = (1/np.sin(theta))*((RJ/rs)**(n+2)) * np.sum(
-                P_nm*m*(-g_nm*np.sin(m*phi) + h_nm*np.cos(m*phi))
-            )
-
-            # print(P_nm.shape)
-            # print(g_nm.shape)
-            # print(h_nm.shape)
-            # print(h_nm)
+            dVdr_n[i] = np.sum(P_nm*(g_nm*np.cos(m*phi) + h_nm*np.sin(m*phi)))
 
         # INDEX n方向に和をとる
-        dVdr = -np.sum(dVdr_n)
-        dVdtheta = -np.sum(dVdtheta_n)
-        dVdphi = -np.sum(dVdphi_n)
+        dVdr = np.sum(dVdr_n)
 
         # print(dVdr*1E-5)
         # print(dVdtheta*1E-5)
         # print(dVdphi*1E-5)
         # print(np.sqrt(dVdr**2 + dVdtheta**2 + dVdphi**2)*1E-5)
 
-        return np.array([dVdr, dVdtheta, dVdphi])
+        return dVdr

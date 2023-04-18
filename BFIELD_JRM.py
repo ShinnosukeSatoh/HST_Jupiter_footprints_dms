@@ -83,18 +83,20 @@ def main():
     # sate_s3 = satellite_Nftp[:, 0]
 
     # B FIELD MAPPING
-    lat_arr = np.linspace(-89.85, 89.85, 90)
+    lat_arr = np.linspace(-89.85, 89.85, 200)
     wlong_arr = np.linspace(0, 360, lat_arr.size*2)
     x, y = np.meshgrid(wlong_arr, lat_arr)
 
-    B_abs_arr = np.zeros(x.shape)
+    Br_arr = np.zeros(x.shape)
+    Babs_arr = np.zeros(x.shape)
 
     for i in range(x.shape[0]):
         for j in range(x.shape[1]):
             wlong = x[i, j]
             lat = y[i, j]
             Bvec = B_JRM(lat, wlong)*1E-5
-            B_abs_arr[i, j] = np.sqrt(Bvec[0]**2 + Bvec[1]**2 + Bvec[2]**2)
+            Br_arr[i, j] = Bvec[0]
+            Babs_arr[i, j] = np.sqrt(Bvec[0]**2 + Bvec[1]**2 + Bvec[2]**2)
 
     # PLOT
     """
@@ -162,12 +164,18 @@ def main():
                    zorder=10-i
                    )
 
-    cs = ax.pcolormesh(wlong_arr, lat_arr, B_abs_arr,
+    cs = ax.pcolormesh(wlong_arr, lat_arr,
+                       # Babs_arr,
+                       Br_arr,
                        # cmap='YlGnBu_r',
                        cmap=cmap,
-                       vmin=0,
+                       # vmin=0,
                        zorder=0.1
                        )
+    cn = ax.contour(wlong_arr, lat_arr,
+                    Br_arr,
+                    levels=10, colors='#ffffff')
+    ax.clabel(cn)
     pp = fig.colorbar(cs)
     pp.ax.set_title(' ', fontsize=fontsize)
     pp.set_label('Intensity [G]', fontsize=fontsize)
