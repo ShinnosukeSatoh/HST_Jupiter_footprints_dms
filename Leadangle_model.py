@@ -208,12 +208,12 @@ rvec0 = np.array([x0, y0, z0])
 
 # ダイポール座標系に持っていく
 # S3RH で Z3軸 の(右ネジ)まわりに-65.8度回転
-"""phiRH0 = math.radians(-65.8)    # Connerney+2020
+phiRH0 = math.radians(-65.8)    # Connerney+2020
 rvec0 = np.array([
     rvec0[0, :]*math.cos(phiRH0) - rvec0[1, :]*math.sin(phiRH0),
     rvec0[0, :]*math.sin(phiRH0) + rvec0[1, :]*math.cos(phiRH0),
     rvec0[2, :]
-])"""
+])
 
 # S3RH で X3軸 の(右ネジ)まわりに-7度回転
 TILT0 = math.radians(6.7)
