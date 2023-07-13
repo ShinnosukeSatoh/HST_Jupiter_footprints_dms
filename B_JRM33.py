@@ -14,6 +14,7 @@ Version
 
 # %% LIBRARIES
 import numpy as np
+import math
 import pyshtools as pysh
 
 
@@ -39,6 +40,17 @@ mu0 = 1.26E-6           # PERMEABILITY [N A^-2] = [kg m s^-2 A^-2]
 me = 9.1E-31            # MASS OF ELECTRON [kg]
 e = (1.6E-19)           # CHARGE OF ELECTRON [C]
 
+R0 = 7.8*RJ      # [m] Connerney+2020
+R1 = 51.4*RJ     # [m] Connerney+2020
+AA = R0          # [m] Connerney+2020
+BB = R1          # [m] Connerney+2020
+CC = 139.6       # [nT] Connerney+2020 (A = mu0*I0/2)
+DD = 3.6*RJ      # [m] Connerney+2020
+# Disc normal from rotation axis Connerney+2020
+THETA_D = math.radians(9.3)
+# Azimuth angle of disc normal Connerney+2020
+PHI_D = math.radians(204.2)
+
 
 class B():
     def __init__(self):
@@ -56,8 +68,8 @@ class B():
         """
 
         # SCHMIDT QUASI-NORMALIZED LEGENDRE FUNCTIONS
-        p_arr, dp_arr = pysh.legendre.PlmSchmidt_d1(NN, np.cos(theta))
-        dp_arr *= -np.sin(theta)        # NECESSARY MULTIPLICATION
+        p_arr, dp_arr = pysh.legendre.PlmSchmidt_d1(NN, math.cos(theta))
+        dp_arr *= -math.sin(theta)        # NECESSARY MULTIPLICATION
 
         p_arr = p_arr[1:]               # n <= 1
         dp_arr = dp_arr[1:]             # n <= 1
@@ -104,7 +116,7 @@ class B():
             )
 
             # INDEX m方向に和をとる
-            dVdphi_n[i] = (1/np.sin(theta))*((RJ/rs)**(n+2)) * np.sum(
+            dVdphi_n[i] = (1/math.sin(theta))*((RJ/rs)**(n+2)) * np.sum(
                 P_nm*m*(-g_nm*np.sin(m*phi) + h_nm*np.cos(m*phi))
             )
 
@@ -124,3 +136,46 @@ class B():
         # print(np.sqrt(dVdr**2 + dVdtheta**2 + dVdphi**2)*1E-5)
 
         return np.array([dVdr, dVdtheta, dVdphi])
+
+    def BCS(self, X, Y, Z, phi):
+        """
+        Current sheet model by Connerney1981 & Connerney+2020\
+        return ndarray(Bx, By, Bz) in [nT]
+        """
+
+        # ダイポール座標系に持っていく
+        # S3RH で Z3軸 の(右ネジ)まわりに-65.8度回転
+        phiRH0 = math.radians(-65.8)    # Connerney+2020
+        rvec0 = np.array([
+            X*math.cos(phiRH0) - Y*math.sin(phiRH0),
+            X*math.sin(phiRH0) + Y*math.cos(phiRH0),
+            Z
+        ])
+
+        # S3RH で X3軸 の(右ネジ)まわりに-7度回転
+        rvec0 = np.array([
+            rvec0[0],
+            rvec0[1]*math.cos(THETA_D) - rvec0[2]*math.sin(THETA_D),
+            rvec0[1]*math.sin(THETA_D) + rvec0[2]*math.cos(THETA_D)
+        ])
+
+        rho = math.sqrt(rvec0[0]**2 + rvec0[1]**2)
+        z = rvec0[2]
+
+        F1 = math.sqrt((z-DD)**2 + AA**2)
+        F2 = math.sqrt((z+DD)**2 + AA**2)
+
+        Brho = CC*rho*(1/F1 - 1/F2)
+        Bphi = 0
+        Bz = CC*(2*DD/math.sqrt(z**2+AA**2)
+                 - 0.25*(rho**2)*((z-DD)/F1**3-(z+DD)/F2**3)
+                 - 2*DD/math.sqrt(z**2+BB**2))
+
+        Bx = Brho*math.cos(phi)
+        By = Brho*math.sin(phi)
+
+        # print(math.sqrt(Bx**2 + By**2 + Bz**2))
+
+        return np.array([Bx, By, Bz])
+
+# %%
