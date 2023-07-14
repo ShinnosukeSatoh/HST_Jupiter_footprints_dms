@@ -100,9 +100,12 @@ if MOON == 'Europa':
     rho0_2 = 2000        # プラズマ質量密度 [amu cm-3] (Bagenal+2015)
     rho0_3 = 3600        # プラズマ質量密度 [amu cm-3] (Bagenal+2015)
 
-    # rho0_1 = 1709        # プラズマ質量密度 [amu cm-3] (by ME)
-    # rho0_2 = 3539        # プラズマ質量密度 [amu cm-3] (by ME)
-    # rho0_3 = 4548        # プラズマ質量密度 [amu cm-3] (by ME)
+    rho0_1 = 1709        # プラズマ質量密度 [amu cm-3] (by ME)
+    rho0_2 = 3539        # プラズマ質量密度 [amu cm-3] (by ME)
+    rho0_3 = 4548        # プラズマ質量密度 [amu cm-3] (by ME)
+    rho0_1 = 2050        # プラズマ質量密度 [amu cm-3] (by ME)
+    rho0_2 = 4031        # プラズマ質量密度 [amu cm-3] (by ME)
+    rho0_3 = 5458        # プラズマ質量密度 [amu cm-3] (by ME)
 
     H_p = 1.8*RJ         # [m]
     Hp0 = 0.64*RJ        # 基準スケールハイト [m] (Bagenal&Delamere2011)
@@ -230,8 +233,8 @@ rho_1 = np.zeros(S3wlon.size)
 VA_1 = np.zeros(S3wlon.size)
 for i in range(S3wlon.size):
     S0 = LeadA.Awave().tracefield(r_orbitM, S3wlon[i])
-    tau[i] = LeadA.Awave().tracefield2(r_orbitM, S3wlon[i], S0,
-                                       rho0_1, Hp_1, 'N')      # 北向きの伝搬
+    tau[i], _, _ = LeadA.Awave().tracefield2(r_orbitM, S3wlon[i], S0,
+                                             rho0_1, Hp_1, 'N')      # 北向きの伝搬
     rho_1[i] = rho0_1*AMU*1E+6*np.exp(-(S0/Hp_1)**2)
     VA_1[i] = B[i]/math.sqrt(MU0*rho_1[i])
 leadangle_L = np.degrees(OMGR*tau)
@@ -241,8 +244,8 @@ rho_2 = np.zeros(S3wlon.size)
 VA_2 = np.zeros(S3wlon.size)
 for i in range(S3wlon.size):
     S0 = LeadA.Awave().tracefield(r_orbitM, S3wlon[i])
-    tau[i] = LeadA.Awave().tracefield2(r_orbitM, S3wlon[i], S0,
-                                       rho0_2, Hp_2, 'N')      # 北向きの伝搬
+    tau[i], _, _ = LeadA.Awave().tracefield2(r_orbitM, S3wlon[i], S0,
+                                             rho0_2, Hp_2, 'N')      # 北向きの伝搬
     rho_2[i] = rho0_2*AMU*1E+6*np.exp(-(S0/Hp_2)**2)
     VA_2[i] = B[i]/math.sqrt(MU0*rho_2[i])
 leadangle_M = np.degrees(OMGR*tau)
@@ -252,8 +255,8 @@ rho_3 = np.zeros(S3wlon.size)
 VA_3 = np.zeros(S3wlon.size)
 for i in range(S3wlon.size):
     S0 = LeadA.Awave().tracefield(r_orbitM, S3wlon[i])
-    tau[i] = LeadA.Awave().tracefield2(r_orbitM, S3wlon[i], S0,
-                                       rho0_3, Hp_3, 'N')      # 北向きの伝搬
+    tau[i], _, _ = LeadA.Awave().tracefield2(r_orbitM, S3wlon[i], S0,
+                                             rho0_3, Hp_3, 'N')      # 北向きの伝搬
     rho_3[i] = rho0_3*AMU*1E+6*np.exp(-(S0/Hp_3)**2)
     VA_3[i] = B[i]/math.sqrt(MU0*rho_3[i])
 leadangle_H = np.degrees(OMGR*tau)
@@ -348,11 +351,11 @@ ax[3].text(0.01, 0.2, '(d)', color='k',
            fontsize=fsize)
 
 ax[4].set_xlim(0, 360)
-ax[4].set_ylim(0, 15)
+ax[4].set_ylim(0, 20)
 ax[4].set_xlabel("Moon System III longitude [deg]", fontsize=fsize)
 ax[4].set_ylabel('Lead angle\n$\delta_{eq}$ [deg]', fontsize=fsize)
-ax[4].set_yticks(np.arange(0, 16, 5))
-ax[4].set_yticklabels(np.arange(0, 16, 5))
+ax[4].set_yticks(np.arange(0, 21, 5))
+ax[4].set_yticklabels(np.arange(0, 21, 5))
 ax[4].plot(np.degrees(S3wlon), leadangle_M,
            linestyle='solid', linewidth=2, color='k')
 # ax[4].plot(np.degrees(S3wlon), leadangle_M1,
@@ -379,31 +382,31 @@ ax[4].text(0.01, 0.17, '(e)', color='k',
            verticalalignment='top',
            transform=ax[4].transAxes,
            fontsize=fsize)
-ax[4].text(0.3, 0.63, '- Low/hot', color='b',
+ax[4].text(0.33, 0.63, '- Low/hot', color='b',
            horizontalalignment='left',
            verticalalignment='top',
            transform=ax[4].transAxes,
            fontsize=fsize*0.72)
-ax[4].text(0.3, 0.73, '- Medium', color='k',
+ax[4].text(0.33, 0.73, '- Medium', color='k',
            horizontalalignment='left',
            verticalalignment='top',
            transform=ax[4].transAxes,
            fontsize=fsize*0.72)
-ax[4].text(0.3, 0.83, '- High/cold', color='r',
+ax[4].text(0.33, 0.83, '- High/cold', color='r',
            horizontalalignment='left',
            verticalalignment='top',
            transform=ax[4].transAxes,
            fontsize=fsize*0.72)
-"""ax[4].text(0.3, 0.96, '$N_{col}=1.0\\times 10^{-9}$ [kg m$^{-3}$]', color='k',
+ax[4].text(0.33, 0.96, '$N_{col}=1.2\\times 10^{-9}$ [kg m$^{-3}$]', color='k',
+           horizontalalignment='left',
+           verticalalignment='top',
+           transform=ax[4].transAxes,
+           fontsize=fsize*0.72)
+"""ax[4].text(0.3, 0.96, 'Scenarios by Bagenal+2015', color='k',
            horizontalalignment='left',
            verticalalignment='top',
            transform=ax[4].transAxes,
            fontsize=fsize*0.72)"""
-ax[4].text(0.3, 0.96, 'Scenarios by Bagenal+2015', color='k',
-           horizontalalignment='left',
-           verticalalignment='top',
-           transform=ax[4].transAxes,
-           fontsize=fsize*0.72)
 
 for i in range(5):
     ax[i].tick_params(axis='y', labelsize=fsize)

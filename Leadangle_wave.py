@@ -301,6 +301,7 @@ class Awave():
         `S3wlong0` EuropaのSystem III経度 [rad] \\
         Europaの位置から遠心力赤道まで磁力線をトレースし、沿磁力線の距離S0を計算する。
         """
+        Niter = int(20000)
 
         # 磁力線に沿ってトレースしたい
         rs = copy.copy(r_orbit)                # [m]
@@ -324,12 +325,18 @@ class Awave():
         # 線要素
         ds = 50000     # [m]
 
+        # Alfven速度を格納
+        Va_arr = np.zeros(Niter)
+
+        # Moon latitude (theta)を格納
+        theta_arr = np.zeros(Niter)
+
         # 電離圏の方角
         if NS == 'N':
             ns = -1     # 北向き
         else:
             ns = 1      # 南向き
-        for _ in range(800000):
+        for i in range(Niter):
             Bv = BJRM.B().JRM33(rs, theta, phi)*1E-9        # [T]
             Bx = Bv[0]*math.sin(theta)*math.cos(phi) \
                 + Bv[1]*math.cos(theta)*math.cos(phi) \
@@ -366,9 +373,9 @@ class Awave():
             tau += dt   # [sec]
 
             # 座標更新 (x, y, z)
-            x += ds*Bx/B0*ns
-            y += ds*By/B0*ns
-            z += ds*Bz/B0*ns
+            x += (ds*Bx/B0)*ns
+            y += (ds*By/B0)*ns
+            z += (ds*Bz/B0)*ns
 
             # 座標更新 (r, theta, phi)
             rs = math.sqrt(x**2 + y**2 + z**2)
@@ -378,18 +385,27 @@ class Awave():
             # 座標更新 (沿磁力線: S0)
             S0 += ds*(-ns)
 
-            if Va/C > 0.03:
-                print('       Too fast!', rs/RJ, rho/(AMU*1E+6))
-                break
+            # 配列格納
+            Va_arr[i] = Va          # [m/s]
+            theta_arr[i] = theta    # [rad]
+
+            # if Va/C > 0.2:
+            #     print('       Too fast!', rs/RJ, rho/(AMU*1E+6))
+            #     break
 
             # 電離圏の方角
-            if (NS == 'N') and (S0 > 1.5*Hp):
-                print('      ', rs/RJ, rho/(AMU*1E+6), zS3RH/RJ, tau)
+            # if (NS == 'N') and (Va/C > 0.2):    # VAで基準
+            if (NS == 'N') and (S0 > 2*Hp):
+                print('      N', i, rs/RJ, rho/(AMU*1E+6), S0/RJ, tau)
                 break
-            if (NS == 'S') and (S0 < 1.5*Hp):
-                print('      ', rs/RJ, rho/(AMU*1E+6), zS3RH/RJ, tau)
+            if (NS == 'S') and (S0 < 2*Hp):
+                print('      S', i, rs/RJ, rho/(AMU*1E+6), S0/RJ, tau)
                 break
 
-        return tau
+        # 値が格納されていない部分は削除
+        Va_arr = Va_arr[:i]
+        theta_arr = theta_arr[:i]
+
+        return tau, theta_arr, Va_arr
 
 # %%
