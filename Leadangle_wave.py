@@ -317,7 +317,7 @@ class Awave():
 
         # S3RH で X3軸 の(右ネジ)まわりに-7度回転
         zS3RH0 = y0*math.sin(TILT0) + z0*math.cos(TILT0)
-        print(math.degrees(S3wlong0), zS3RH0/Hp, S0/Hp)
+        # print(math.degrees(S3wlong0), zS3RH0/Hp, S0/Hp)
 
         # 伝搬時間
         tau = 0     # [sec]
@@ -396,10 +396,10 @@ class Awave():
             # 電離圏の方角
             # if (NS == 'N') and (Va/C > 0.2):    # VAで基準
             if (NS == 'N') and (S0 > 2*Hp):
-                print('      N', i, rs/RJ, rho/(AMU*1E+6), S0/RJ, tau)
+                # print('      N', i, rs/RJ, rho/(AMU*1E+6), S0/RJ, tau)
                 break
             if (NS == 'S') and (S0 < 2*Hp):
-                print('      S', i, rs/RJ, rho/(AMU*1E+6), S0/RJ, tau)
+                # print('      S', i, rs/RJ, rho/(AMU*1E+6), S0/RJ, tau)
                 break
 
         # 値が格納されていない部分は削除
