@@ -312,11 +312,11 @@ class Awave():
         z = rs*math.cos(theta)
 
         # 磁軸に合わせる
-        y0 = x*math.sin(phiRH0) + y*math.cos(phiRH0)
-        z0 = z
+        # y0 = x*math.sin(phiRH0) + y*math.cos(phiRH0)
+        # z0 = z
 
         # S3RH で X3軸 の(右ネジ)まわりに-7度回転
-        zS3RH0 = y0*math.sin(TILT0) + z0*math.cos(TILT0)
+        # zS3RH0 = y0*math.sin(TILT0) + z0*math.cos(TILT0)
         # print(math.degrees(S3wlong0), zS3RH0/Hp, S0/Hp)
 
         # 伝搬時間
@@ -354,11 +354,11 @@ class Awave():
             B0 = math.sqrt(Bx**2+By**2+Bz**2)      # [T]
 
             # 磁軸に合わせる
-            y0 = x*math.sin(phiRH0) + y*math.cos(phiRH0)
-            z0 = z
+            # y0 = x*math.sin(phiRH0) + y*math.cos(phiRH0)
+            # z0 = z
 
             # S3RH で X3軸 の(右ネジ)まわりに-7度回転
-            zS3RH = y0*math.sin(TILT0) + z0*math.cos(TILT0)
+            # zS3RH = y0*math.sin(TILT0) + z0*math.cos(TILT0)
 
             # プラズマ質量密度 rho
             rho = rho0*AMU*(1E+6)*np.exp(-(S0/Hp)**2)     # [kg m-3]

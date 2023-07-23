@@ -13,6 +13,7 @@ Version
 
 
 # %% LIBRARIES
+from numba import jit
 import numpy as np
 import math
 import pyshtools as pysh
