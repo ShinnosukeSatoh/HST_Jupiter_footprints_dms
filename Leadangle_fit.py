@@ -223,19 +223,25 @@ def LAplot(doy1422, estimations, RHO0: float, TI: float, chi2: float, II: int, J
             fontsize=fontsize*0.72)
 
     fig.tight_layout()
-    plt.savefig('img/LeadangleFit/2014_2/fit_'+str(II)+'_' +
+    plt.savefig('img/LeadangleFit/2022_5/fit_'+str(II)+'_' +
                 str(JJ)+'.png', bbox_inches='tight')
     plt.close()
     return 0
 
 
 # %% Main function
-def main(RHO0: float, Ti0: float, HP0: float, IMG_LEN: int, II: int, JJ: int, DOY1422):
+def main(RHO0: float, Ti0: float, HP0: float, IMG_LEN: int, II: int, JJ: int, year):
     """
     `RHO0`: plasma density at the equator [amu cm-3] \\
     `Ti0`: plasma temperature [eV] \\
     `HP0`: scale height of the plasma sheet [m]
     """
+
+    if year == 2014:
+        DOY1422 = north_doy14
+
+    elif year == 2022:
+        DOY1422 = north_doy14
 
     estimations = np.zeros((3, IMG_LEN))
     moons30_arrA = np.zeros(IMG_LEN)
@@ -262,7 +268,7 @@ def main(RHO0: float, Ti0: float, HP0: float, IMG_LEN: int, II: int, JJ: int, DO
     with Pool(processes=45) as pool:
         result_list = list(pool.starmap(calc, args))
     tau = np.array(result_list)         # [sec]
-    print('time', time.time()-start)
+    print(str(II)+' '+str(JJ)+' time', time.time()-start)
 
     leadangle_est = np.degrees(OMGR*tau)  # [deg]
 
@@ -276,7 +282,8 @@ def main(RHO0: float, Ti0: float, HP0: float, IMG_LEN: int, II: int, JJ: int, DO
     estimations[2, :] = leadangle_est
 
     # CHI SQUARE VALUE
-    chi2 = np.sum(((estimations[1, :]-estimations[2, :])**2)/estimations[2, :])
+    chi2 = np.sum(
+        ((estimations[1, :]-estimations[2, :])**2)/(estimations[2, :]))
 
     # PLOT
     LAplot(DOY1422, estimations, RHO0, Ti0, chi2, II, JJ)
@@ -284,19 +291,99 @@ def main(RHO0: float, Ti0: float, HP0: float, IMG_LEN: int, II: int, JJ: int, DO
     return chi2
 
 
+def main2(RHO0: float, Ti0: float, HP0: float, II: int, JJ: int, year: int):
+    """
+    `RHO0`: plasma density at the equator [amu cm-3] \\
+    `Ti0`: plasma temperature [eV] \\
+    `HP0`: scale height of the plasma sheet [m]
+    """
+
+    if year == 2014:
+        DOY1422 = north_doy14
+        img_cut = [[8, 8, 8, 8, 8, 8, 9],
+                   [7, 7, 7, 8, 7, 7, 7, 8, 8],
+                   [8, 9, 9, 9]]
+        cut_idx = [[0, 8, 16, 24, 32, 40, 48],
+                   [0, 7, 14, 21, 29, 36, 43, 50, 58],
+                   [0, 8, 17, 26]]
+        ests = np.zeros((4, 20))
+
+    elif year == 2022:
+        DOY1422 = north_doy22
+        img_cut = [[10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9],
+                   [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 9]]
+        cut_idx = [[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140],
+                   [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 209]]
+        ests = np.zeros((4, 37))
+
+    NN = 0     # end index of images of the doy
+    for i in range(len(DOY1422)):
+        data_arr = np.loadtxt(
+            'data/red3_leadangle/EUROPA/20'+DOY1422[i]+'_eq.txt')
+        params_arr = np.zeros((3, len(cut_idx[i])))
+        for j in range(len(cut_idx[i])):
+            moons30_arr = data_arr[0, cut_idx[i]
+                                   [j]:cut_idx[i][j]+img_cut[i][j]]
+            eq_leadangle = data_arr[1, cut_idx[i]
+                                    [j]:cut_idx[i][j]+img_cut[i][j]]
+            params_arr[0, j] = np.average(moons30_arr)         # 平均値 [deg]
+            params_arr[1, j] = np.average(eq_leadangle)        # 平均値 [deg]
+            params_arr[2, j] = np.std(eq_leadangle, ddof=1)    # 標準偏差 [deg]
+        # moon s3 longitude [deg]
+        ests[0, NN:NN+params_arr.shape[1]] = params_arr[0, :]
+        # observed lead angle [deg]
+        ests[1, NN:NN+params_arr.shape[1]] = params_arr[1, :]
+        # standard deviation [deg]
+        ests[3, NN:NN+params_arr.shape[1]] = params_arr[2, :]
+
+        NN += params_arr.shape[1]
+
+    # 並列計算用 変数リスト(zip)
+    # np.arrayは不可。ここが1次元なのでpoolの結果も1次元。
+    args = list(zip(
+        RHO0*np.ones(ests.shape[1]),
+        HP0*np.ones(ests.shape[1]),
+        ests[0, :]))
+
+    start = time.time()
+    with Pool(processes=20) as pool:
+        result_list = list(pool.starmap(calc, args))
+    tau = np.array(result_list)         # [sec]
+    print(str(II)+' '+str(JJ)+' time', time.time()-start)
+
+    leadangle_est = np.degrees(OMGR*tau)  # [deg]
+
+    # estimated lead angle [deg]
+    ests[2, :] = leadangle_est
+
+    # CHI SQUARE VALUE
+    # chi2 = np.sum(((ests[1, :]-ests[2, :])/ests[3, :])**2)
+    chi2 = np.sum(((ests[1, :]-ests[2, :])/1.0624717750095)**2)
+
+    # PLOT
+    LAplot(DOY1422, ests, RHO0, Ti0, chi2, II, JJ)
+
+    return chi2
+
+
 # %% EXECUTE
 if __name__ == '__main__':
-    doy1422 = north_doy14      # choose 14 or 22
+    year = 2022
+
+    if year == 2014:
+        doy1422 = north_doy14
+
+    elif year == 2022:
+        doy1422 = north_doy14
 
     # Parameters
-    RHO0_len = 28
-    Ti0_len = 27
+    RHO0_len = 46
+    Ti0_len = 47
 
     RHO0 = np.linspace(300, 4000, RHO0_len)
-    Ti0 = np.linspace(40, 340, Ti0_len)
-
+    Ti0 = np.linspace(20, 340, Ti0_len)
     RHO0, Ti0 = np.meshgrid(RHO0, Ti0)
-    print(RHO0.shape)
+    # print(RHO0.shape)
 
     # Plasma sheet scale height
     HP_arr = Hp0*np.sqrt(Ti0/Ai_1)     # [m] (Bagenal&Delamere2011)
@@ -319,16 +406,19 @@ if __name__ == '__main__':
         if HP_arr[i, 0] > 2.7*RJ:
             break
         for j in range(RHO0_len):
-            chi2_arr[i, j] = main(RHO0[i, j], Ti0[i, j],
+            """chi2_arr[i, j] = main(RHO0[i, j], Ti0[i, j],
                                   HP_arr[i, j], IMG_LEN,
-                                  i, j, doy1422)
+                                  i, j, year)"""
+            chi2_arr[i, j] = main2(RHO0[i, j], Ti0[i, j],
+                                   HP_arr[i, j],
+                                   i, j, year)
     print('total time', time.time()-start)
 
     print(chi2_arr)
 
-    np.savetxt('img/LeadangleFit/2014_2/params_RHO0.txt',
+    np.savetxt('img/LeadangleFit/2022_5/params_RHO0.txt',
                RHO0)
-    np.savetxt('img/LeadangleFit/2014_2/params_Ti0.txt',
+    np.savetxt('img/LeadangleFit/2022_5/params_Ti0.txt',
                Ti0)
-    np.savetxt('img/LeadangleFit/2014_2/params_chi2.txt',
+    np.savetxt('img/LeadangleFit/2022_5/params_chi2.txt',
                chi2_arr)
