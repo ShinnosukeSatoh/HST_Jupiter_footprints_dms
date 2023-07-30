@@ -223,7 +223,7 @@ def LAplot(doy1422, estimations, RHO0: float, TI: float, chi2: float, II: int, J
             fontsize=fontsize*0.72)
 
     fig.tight_layout()
-    plt.savefig('img/LeadangleFit/2022_5/fit_'+str(II)+'_' +
+    plt.savefig('img/LeadangleFit/2014_6B/fit_'+str(II)+'_' +
                 str(JJ)+'.png', bbox_inches='tight')
     plt.close()
     return 0
@@ -300,13 +300,13 @@ def main2(RHO0: float, Ti0: float, HP0: float, II: int, JJ: int, year: int):
 
     if year == 2014:
         DOY1422 = north_doy14
-        img_cut = [[8, 8, 8, 8, 8, 8, 9],
-                   [7, 7, 7, 8, 7, 7, 7, 8, 8],
-                   [8, 9, 9, 9]]
-        cut_idx = [[0, 8, 16, 24, 32, 40, 48],
-                   [0, 7, 14, 21, 29, 36, 43, 50, 58],
-                   [0, 8, 17, 26]]
-        ests = np.zeros((4, 20))
+        img_cut = [[7, 7, 7, 7, 6, 6, 6, 6, 5],
+                   [6, 6, 6, 6, 5, 6, 6, 6, 6, 6, 7],
+                   [6, 6, 5, 6, 6, 6]]
+        cut_idx = [[0, 7, 14, 21, 28, 34, 40, 46, 52],
+                   [0, 6, 12, 18, 24, 29, 35, 41, 47, 53, 59],
+                   [0, 6, 12, 17, 23, 29]]
+        ests = np.zeros((4, 26))
 
     elif year == 2022:
         DOY1422 = north_doy22
@@ -346,7 +346,7 @@ def main2(RHO0: float, Ti0: float, HP0: float, II: int, JJ: int, year: int):
         ests[0, :]))
 
     start = time.time()
-    with Pool(processes=20) as pool:
+    with Pool(processes=25) as pool:
         result_list = list(pool.starmap(calc, args))
     tau = np.array(result_list)         # [sec]
     print(str(II)+' '+str(JJ)+' time', time.time()-start)
@@ -368,7 +368,7 @@ def main2(RHO0: float, Ti0: float, HP0: float, II: int, JJ: int, year: int):
 
 # %% EXECUTE
 if __name__ == '__main__':
-    year = 2022
+    year = 2014
 
     if year == 2014:
         doy1422 = north_doy14
@@ -379,11 +379,16 @@ if __name__ == '__main__':
     # Parameters
     RHO0_len = 46
     Ti0_len = 47
-
     RHO0 = np.linspace(300, 4000, RHO0_len)
+
+    RHO0 = np.arange(4000, 4600, 82.22222222222223)  # Additional calculation!
+    # Additional calculation!
+    RHO0 = np.arange(RHO0[-1], 6000, 82.22222222222223)
+    RHO0 = RHO0[1:]
+    RHO0_len = RHO0.size
+    print('RHO0_len', RHO0_len)
     Ti0 = np.linspace(20, 340, Ti0_len)
     RHO0, Ti0 = np.meshgrid(RHO0, Ti0)
-    # print(RHO0.shape)
 
     # Plasma sheet scale height
     HP_arr = Hp0*np.sqrt(Ti0/Ai_1)     # [m] (Bagenal&Delamere2011)
@@ -416,9 +421,9 @@ if __name__ == '__main__':
 
     print(chi2_arr)
 
-    np.savetxt('img/LeadangleFit/2022_5/params_RHO0.txt',
+    np.savetxt('img/LeadangleFit/2014_6B/params_RHO0.txt',
                RHO0)
-    np.savetxt('img/LeadangleFit/2022_5/params_Ti0.txt',
+    np.savetxt('img/LeadangleFit/2014_6B/params_Ti0.txt',
                Ti0)
-    np.savetxt('img/LeadangleFit/2022_5/params_chi2.txt',
+    np.savetxt('img/LeadangleFit/2014_6B/params_chi2.txt',
                chi2_arr)
