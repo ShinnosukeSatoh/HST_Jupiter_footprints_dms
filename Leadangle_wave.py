@@ -398,7 +398,7 @@ class Awave():
             if (NS == 'N') and (S0 > 2*Hp):
                 # print('      N', i, rs/RJ, rho/(AMU*1E+6), S0/RJ, tau)
                 break
-            if (NS == 'S') and (S0 < 2*Hp):
+            if (NS == 'S') and (S0 < -2*Hp):
                 # print('      S', i, rs/RJ, rho/(AMU*1E+6), S0/RJ, tau)
                 break
 

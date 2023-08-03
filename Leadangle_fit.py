@@ -223,7 +223,7 @@ def LAplot(doy1422, estimations, RHO0: float, TI: float, chi2: float, II: int, J
             fontsize=fontsize*0.72)
 
     fig.tight_layout()
-    plt.savefig('img/LeadangleFit/2014_6B/fit_'+str(II)+'_' +
+    plt.savefig('img/LeadangleFit/2022_7/fit_'+str(II)+'_' +
                 str(JJ)+'.png', bbox_inches='tight')
     plt.close()
     return 0
@@ -307,6 +307,7 @@ def main2(RHO0: float, Ti0: float, HP0: float, II: int, JJ: int, year: int):
                    [0, 6, 12, 18, 24, 29, 35, 41, 47, 53, 59],
                    [0, 6, 12, 17, 23, 29]]
         ests = np.zeros((4, 26))
+        la_err = np.array([1.0614052546455, 1.1145213015136, 0.8732066510795])
 
     elif year == 2022:
         DOY1422 = north_doy22
@@ -315,6 +316,7 @@ def main2(RHO0: float, Ti0: float, HP0: float, II: int, JJ: int, year: int):
         cut_idx = [[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140],
                    [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 209]]
         ests = np.zeros((4, 37))
+        la_err = np.array([1.0478863038047, 0.8994575700965])
 
     NN = 0     # end index of images of the doy
     for i in range(len(DOY1422)):
@@ -326,14 +328,14 @@ def main2(RHO0: float, Ti0: float, HP0: float, II: int, JJ: int, year: int):
                                    [j]:cut_idx[i][j]+img_cut[i][j]]
             eq_leadangle = data_arr[1, cut_idx[i]
                                     [j]:cut_idx[i][j]+img_cut[i][j]]
-            params_arr[0, j] = np.average(moons30_arr)         # 平均値 [deg]
-            params_arr[1, j] = np.average(eq_leadangle)        # 平均値 [deg]
-            params_arr[2, j] = np.std(eq_leadangle, ddof=1)    # 標準偏差 [deg]
+            params_arr[0, j] = np.average(moons30_arr)      # 平均値 [deg]
+            params_arr[1, j] = np.average(eq_leadangle)     # 平均値 [deg]
+            params_arr[2, j] = la_err[i]                    # Wlong err [deg]
         # moon s3 longitude [deg]
         ests[0, NN:NN+params_arr.shape[1]] = params_arr[0, :]
         # observed lead angle [deg]
         ests[1, NN:NN+params_arr.shape[1]] = params_arr[1, :]
-        # standard deviation [deg]
+        # error [deg]
         ests[3, NN:NN+params_arr.shape[1]] = params_arr[2, :]
 
         NN += params_arr.shape[1]
@@ -357,8 +359,7 @@ def main2(RHO0: float, Ti0: float, HP0: float, II: int, JJ: int, year: int):
     ests[2, :] = leadangle_est
 
     # CHI SQUARE VALUE
-    # chi2 = np.sum(((ests[1, :]-ests[2, :])/ests[3, :])**2)
-    chi2 = np.sum(((ests[1, :]-ests[2, :])/1.0624717750095)**2)
+    chi2 = np.sum(((ests[1, :]-ests[2, :])/ests[3, :])**2)
 
     # PLOT
     LAplot(DOY1422, ests, RHO0, Ti0, chi2, II, JJ)
@@ -368,7 +369,7 @@ def main2(RHO0: float, Ti0: float, HP0: float, II: int, JJ: int, year: int):
 
 # %% EXECUTE
 if __name__ == '__main__':
-    year = 2014
+    year = 2022
 
     if year == 2014:
         doy1422 = north_doy14
@@ -377,17 +378,20 @@ if __name__ == '__main__':
         doy1422 = north_doy14
 
     # Parameters
-    RHO0_len = 46
-    Ti0_len = 47
-    RHO0 = np.linspace(300, 4000, RHO0_len)
+    RHO0_len = 65
+    Ti0_len = 45
+    RHO0 = np.linspace(np.log(300), np.log(6000), RHO0_len)
+    RHO0 = np.exp(RHO0)
 
-    RHO0 = np.arange(4000, 4600, 82.22222222222223)  # Additional calculation!
-    # Additional calculation!
-    RHO0 = np.arange(RHO0[-1], 6000, 82.22222222222223)
-    RHO0 = RHO0[1:]
+    # RHO0 = np.arange(4000, 4600, 82.22222222222223)  # Additional calculation!
+    # RHO0 = np.arange(RHO0[-1], 6000, 82.22222222222223)
+    # RHO0 = RHO0[1:]
+
     RHO0_len = RHO0.size
     print('RHO0_len', RHO0_len)
-    Ti0 = np.linspace(20, 340, Ti0_len)
+
+    Ti0 = np.linspace(np.log(20), np.log(360), Ti0_len)
+    Ti0 = np.exp(Ti0)
     RHO0, Ti0 = np.meshgrid(RHO0, Ti0)
 
     # Plasma sheet scale height
@@ -408,8 +412,9 @@ if __name__ == '__main__':
     start = time.time()
     for i in range(Ti0_len):
         print('Hp [RJ]', HP_arr[i, 0]/RJ)
-        if HP_arr[i, 0] > 2.7*RJ:
-            break
+        if HP_arr[i, 0] > 2.8*RJ:
+            0
+            # break
         for j in range(RHO0_len):
             """chi2_arr[i, j] = main(RHO0[i, j], Ti0[i, j],
                                   HP_arr[i, j], IMG_LEN,
@@ -421,9 +426,9 @@ if __name__ == '__main__':
 
     print(chi2_arr)
 
-    np.savetxt('img/LeadangleFit/2014_6B/params_RHO0.txt',
+    np.savetxt('img/LeadangleFit/2022_7/params_RHO0.txt',
                RHO0)
-    np.savetxt('img/LeadangleFit/2014_6B/params_Ti0.txt',
+    np.savetxt('img/LeadangleFit/2022_7/params_Ti0.txt',
                Ti0)
-    np.savetxt('img/LeadangleFit/2014_6B/params_chi2.txt',
+    np.savetxt('img/LeadangleFit/2022_7/params_chi2.txt',
                chi2_arr)
