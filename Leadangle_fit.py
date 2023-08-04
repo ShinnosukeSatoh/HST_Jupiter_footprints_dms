@@ -223,7 +223,7 @@ def LAplot(doy1422, estimations, RHO0: float, TI: float, chi2: float, II: int, J
             fontsize=fontsize*0.72)
 
     fig.tight_layout()
-    plt.savefig('img/LeadangleFit/2022_7/fit_'+str(II)+'_' +
+    plt.savefig('img/LeadangleFit/2022_8/img/fit_'+str(II)+'_' +
                 str(JJ)+'.png', bbox_inches='tight')
     plt.close()
     return 0
@@ -378,7 +378,7 @@ if __name__ == '__main__':
         doy1422 = north_doy14
 
     # Parameters
-    RHO0_len = 65
+    RHO0_len = 70
     Ti0_len = 45
     RHO0 = np.linspace(np.log(300), np.log(6000), RHO0_len)
     RHO0 = np.exp(RHO0)
@@ -390,7 +390,7 @@ if __name__ == '__main__':
     RHO0_len = RHO0.size
     print('RHO0_len', RHO0_len)
 
-    Ti0 = np.linspace(np.log(20), np.log(360), Ti0_len)
+    Ti0 = np.linspace(np.log(20), np.log(340), Ti0_len)
     Ti0 = np.exp(Ti0)
     RHO0, Ti0 = np.meshgrid(RHO0, Ti0)
 
@@ -426,9 +426,9 @@ if __name__ == '__main__':
 
     print(chi2_arr)
 
-    np.savetxt('img/LeadangleFit/2022_7/params_RHO0.txt',
+    np.savetxt('img/LeadangleFit/2022_8/params_RHO0.txt',
                RHO0)
-    np.savetxt('img/LeadangleFit/2022_7/params_Ti0.txt',
+    np.savetxt('img/LeadangleFit/2022_8/params_Ti0.txt',
                Ti0)
-    np.savetxt('img/LeadangleFit/2022_7/params_chi2.txt',
+    np.savetxt('img/LeadangleFit/2022_8/params_chi2.txt',
                chi2_arr)
