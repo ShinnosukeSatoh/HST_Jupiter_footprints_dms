@@ -25,7 +25,13 @@ import Leadangle_wave as LeadA
 from TScmap import TScmap
 import time
 
-# matplotlib フォント設定
+# %% Switch
+hem = 'South'            # 'North' or 'South'
+year = 202218509         # 2014, 2022, 202218509, 202231019, 202234923
+exname = '2218509_2'
+
+
+# %% matplotlib フォント設定
 fontname = 'Nimbus Sans'
 plt.rcParams.update({'font.sans-serif': fontname,
                      'font.family': 'sans-serif',
@@ -124,12 +130,12 @@ FlatS = copy.copy(satovalS.eulat)
 OMGR = OMGJ-OMG_E
 
 
-# %% HST data
+# %% Colors
 cpalette = ['#E7534B', '#EF8C46', '#F7D702', '#3C8867',
             '#649CDB', '#5341A5', '#A65FAC', '#A2AAAD']
 
-hem = 'North'
 
+# %% HST data
 north_doy14 = ['14/006_v06', '14/013_v13', '14/016_v12']
 north_doy22 = ['22/271_v18', '22/274_v17']
 north_doy = north_doy14 + north_doy22
@@ -146,6 +152,27 @@ if hem == 'South':
 satoval = np.recfromtxt('data/JRM33/satellite_foot_'+refnum+'.txt', skip_header=3,
                         names=['wlon', 'amlat', 'amwlon', 'iolat', 'iowlon', 'eulat', 'euwlon', 'galat', 'gawlon'])
 
+if year == 2014:
+    doy1422 = north_doy14
+
+elif year == 2022:
+    doy1422 = north_doy14
+
+elif year == 2022:
+    doy1422 = north_doy14
+
+elif year == 202218509:
+    doy1422 = ['22/185_v09R']
+
+elif year == 202231019:
+    doy1422 = ['22/310_v19R']
+
+elif year == 202234923:
+    doy1422 = ['22/349_v23R']
+
+else:
+    raise ValueError
+
 
 # %% Function to be in loop
 def calc(RHO0: float, HP: float, MOONS3: float):
@@ -161,7 +188,7 @@ def calc(RHO0: float, HP: float, MOONS3: float):
                                           S0,
                                           RHO0,
                                           HP,
-                                          'N')
+                                          refnum)
     # print('done')
     return tau
 
@@ -223,14 +250,14 @@ def LAplot(doy1422, estimations, RHO0: float, TI: float, chi2: float, II: int, J
             fontsize=fontsize*0.72)
 
     fig.tight_layout()
-    plt.savefig('img/LeadangleFit/2022_8/img/fit_'+str(II)+'_' +
+    plt.savefig('img/LeadangleFit/'+exname+'/img/fit_'+str(II)+'_' +
                 str(JJ)+'.png', bbox_inches='tight')
     plt.close()
     return 0
 
 
 # %% Main function
-def main(RHO0: float, Ti0: float, HP0: float, IMG_LEN: int, II: int, JJ: int, year):
+def main(RHO0: float, Ti0: float, HP0: float, IMG_LEN: int, II: int, JJ: int, year: int):
     """
     `RHO0`: plasma density at the equator [amu cm-3] \\
     `Ti0`: plasma temperature [eV] \\
@@ -291,7 +318,7 @@ def main(RHO0: float, Ti0: float, HP0: float, IMG_LEN: int, II: int, JJ: int, ye
     return chi2
 
 
-def main2(RHO0: float, Ti0: float, HP0: float, II: int, JJ: int, year: int):
+def main2(RHO0: float, Ti0: float, HP0: float, II: int, JJ: int):
     """
     `RHO0`: plasma density at the equator [amu cm-3] \\
     `Ti0`: plasma temperature [eV] \\
@@ -317,6 +344,27 @@ def main2(RHO0: float, Ti0: float, HP0: float, II: int, JJ: int, year: int):
                    [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 209]]
         ests = np.zeros((4, 37))
         la_err = np.array([1.0478863038047, 0.8994575700965])
+
+    elif year == 202218509:
+        DOY1422 = ['22/185_v09R']
+        img_cut = [[7, 7, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]]
+        cut_idx = [[0, 7, 14, 20, 26, 32, 38, 44, 50, 56, 62, 68, 74]]
+        ests = np.zeros((4, 13))
+        la_err = np.array([0.6379928352107])
+
+    elif year == 202231019:
+        DOY1422 = ['22/310_v19R']
+        img_cut = [6, 6, 6, 6, 6, 5]
+        cut_idx = [[0, 6, 12, 18, 24, 30]]
+        ests = np.zeros((4, 6))
+        la_err = np.array([0.56611511426765])
+
+    elif year == 202234923:
+        DOY1422 = ['22/349_v23R']
+        img_cut = [6, 6, 6, 6, 6, 5]
+        cut_idx = [[0, 6, 12, 18, 24, 30]]
+        ests = np.zeros((4, 6))
+        la_err = np.array([0.6325058969635])
 
     NN = 0     # end index of images of the doy
     for i in range(len(DOY1422)):
@@ -348,7 +396,7 @@ def main2(RHO0: float, Ti0: float, HP0: float, II: int, JJ: int, year: int):
         ests[0, :]))
 
     start = time.time()
-    with Pool(processes=25) as pool:
+    with Pool(processes=15) as pool:
         result_list = list(pool.starmap(calc, args))
     tau = np.array(result_list)         # [sec]
     print(str(II)+' '+str(JJ)+' time', time.time()-start)
@@ -369,28 +417,22 @@ def main2(RHO0: float, Ti0: float, HP0: float, II: int, JJ: int, year: int):
 
 # %% EXECUTE
 if __name__ == '__main__':
-    year = 2022
-
-    if year == 2014:
-        doy1422 = north_doy14
-
-    elif year == 2022:
-        doy1422 = north_doy14
-
     # Parameters
     RHO0_len = 70
     Ti0_len = 45
     RHO0 = np.linspace(np.log(300), np.log(6000), RHO0_len)
     RHO0 = np.exp(RHO0)
 
-    # RHO0 = np.arange(4000, 4600, 82.22222222222223)  # Additional calculation!
-    # RHO0 = np.arange(RHO0[-1], 6000, 82.22222222222223)
-    # RHO0 = RHO0[1:]
+    # Southern
+    RHO0_len = 80
+    Ti0_len = 60
+    RHO0 = np.linspace(np.log(1200), np.log(9000), RHO0_len)
+    RHO0 = np.exp(RHO0)
 
     RHO0_len = RHO0.size
     print('RHO0_len', RHO0_len)
 
-    Ti0 = np.linspace(np.log(20), np.log(340), Ti0_len)
+    Ti0 = np.linspace(np.log(100), np.log(2000), Ti0_len)
     Ti0 = np.exp(Ti0)
     RHO0, Ti0 = np.meshgrid(RHO0, Ti0)
 
@@ -421,14 +463,14 @@ if __name__ == '__main__':
                                   i, j, year)"""
             chi2_arr[i, j] = main2(RHO0[i, j], Ti0[i, j],
                                    HP_arr[i, j],
-                                   i, j, year)
+                                   i, j)
     print('total time', time.time()-start)
 
     print(chi2_arr)
 
-    np.savetxt('img/LeadangleFit/2022_8/params_RHO0.txt',
+    np.savetxt('img/LeadangleFit/'+exname+'/params_RHO0.txt',
                RHO0)
-    np.savetxt('img/LeadangleFit/2022_8/params_Ti0.txt',
+    np.savetxt('img/LeadangleFit/'+exname+'/params_Ti0.txt',
                Ti0)
-    np.savetxt('img/LeadangleFit/2022_8/params_chi2.txt',
+    np.savetxt('img/LeadangleFit/'+exname+'/params_chi2.txt',
                chi2_arr)
