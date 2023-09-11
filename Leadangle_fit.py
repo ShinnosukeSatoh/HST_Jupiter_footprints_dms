@@ -424,7 +424,7 @@ if __name__ == '__main__':
     RHO0 = np.exp(RHO0)
 
     # Southern
-    RHO0_len = 80
+    RHO0_len = 70
     Ti0_len = 60
     RHO0 = np.linspace(np.log(1200), np.log(9000), RHO0_len)
     RHO0 = np.exp(RHO0)
@@ -432,7 +432,7 @@ if __name__ == '__main__':
     RHO0_len = RHO0.size
     print('RHO0_len', RHO0_len)
 
-    Ti0 = np.linspace(np.log(100), np.log(2000), Ti0_len)
+    Ti0 = np.linspace(np.log(200), np.log(3600), Ti0_len)
     Ti0 = np.exp(Ti0)
     RHO0, Ti0 = np.meshgrid(RHO0, Ti0)
 
