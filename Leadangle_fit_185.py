@@ -1,4 +1,4 @@
-""" Leadangle_fit.py
+""" Leadangle_fit_185.py
 
 Created on Jul 21, 2023
 @author: Shin Satoh
@@ -7,7 +7,7 @@ Description:
 
 
 Version
-1.0.0 (Jul 21, 2023)
+1.0.0 (Nov 14, 2023)
 
 """
 
@@ -29,7 +29,7 @@ import time
 # %% Switch
 hem = 'South'       # 'North' or 'South'
 year = 2022185      # 2014, 2022, 202218509, 202231019, 202234923
-exname = '2022_185MAW'
+exname = '2022_185MAW_R1'
 
 
 # %% matplotlib フォント設定
@@ -133,6 +133,10 @@ FwlonS = copy.copy(satovalS.euwlon)
 FlatS = copy.copy(satovalS.eulat)
 
 OMGR = OMGJ-OMG_E
+print(OMGR)
+Psyn_eu = (11.22)*3600      # Moon's synodic period [sec]
+OMGR = 2*np.pi/(Psyn_eu)    # Moon's synodic angular velocity [rad/sec]
+print(OMGR)
 
 
 # %% Colors
@@ -181,7 +185,7 @@ else:
 
 
 # %% Function to be in loop
-def calc(RHO0: float, HP: float, MOONS3: float):
+def calcN(RHO0: float, HP: float, MOONS3: float):
     """
     `RHO0`: plasma density at the equator [amu cm-3] \\
     `HP`: scale height of the plasma sheet [m] \\
@@ -194,19 +198,12 @@ def calc(RHO0: float, HP: float, MOONS3: float):
                                           S0,
                                           RHO0,
                                           HP,
-                                          refnum)
+                                          'N')
     # print('done')
     return tau
 
 
-def calc3(RHO0: float,
-          n0_SII: float, H_SII: float,
-          n0_SIII: float, H_SIII: float,
-          n0_SIV: float, H_SIV: float,
-          n0_OII: float, H_OII: float,
-          n0_OIII: float, H_OIII: float,
-          n0_HII: float, H_HII: float,
-          MOONS3: float):
+def calcS(RHO0: float, HP: float, MOONS3: float):
     """
     `RHO0`: plasma density at the equator [amu cm-3] \\
     `HP`: scale height of the plasma sheet [m] \\
@@ -214,48 +211,13 @@ def calc3(RHO0: float,
     """
 
     S0 = LeadA.Awave().tracefield(r_orbitM, math.radians(MOONS3))
-    tau, _, _ = LeadA.Awave().tracefield3(r_orbitM,
+    tau, _, _ = LeadA.Awave().tracefield2(r_orbitM,
                                           math.radians(MOONS3),
                                           S0,
                                           RHO0,
-                                          n0_SII, H_SII,
-                                          n0_SIII, H_SIII,
-                                          n0_SIV, H_SIV,
-                                          n0_OII, H_OII,
-                                          n0_OIII, H_OIII,
-                                          n0_HII, H_HII,
-                                          refnum)
-
-    return tau
-
-
-def calc4(Ti0: float,
-          n0_SII: float, Ti_SII: float,
-          n0_SIII: float, Ti_SIII: float,
-          n0_SIV: float, Ti_SIV: float,
-          n0_OII: float, Ti_OII: float,
-          n0_OIII: float, Ti_OIII: float,
-          n0_HII: float, Ti_HII: float,
-          MOONS3: float):
-    """
-    `RHO0`: plasma density at the equator [amu cm-3] \\
-    `HP`: scale height of the plasma sheet [m] \\
-    `moons3`: system iii longitude of the moon [deg]
-    """
-
-    S0 = LeadA.Awave().tracefield(r_orbitM, math.radians(MOONS3))
-    tau, _, _ = LeadA.Awave().tracefield4(r_orbitM,
-                                          math.radians(MOONS3),
-                                          Ti0,
-                                          S0,
-                                          n0_SII, Ti_SII,
-                                          n0_SIII, Ti_SIII,
-                                          n0_SIV, Ti_SIV,
-                                          n0_OII, Ti_OII,
-                                          n0_OIII, Ti_OIII,
-                                          n0_HII, Ti_HII,
-                                          refnum)
-
+                                          HP,
+                                          'S')
+    # print('done')
     return tau
 
 
@@ -427,68 +389,6 @@ def scaleheight(RHO0: float, Ti0: float, Te0: float):
     return n0_SII, H_SII, n0_SIII, H_SIII, n0_SIV, H_SIV, n0_OII, H_OII, n0_OIII, H_OIII, n0_HII, H_HII
 
 
-# %% Main function
-def main(RHO0: float, Ti0: float, HP0: float, IMG_LEN: int, II: int, JJ: int, year: int):
-    """
-    `RHO0`: plasma density at the equator [amu cm-3] \\
-    `Ti0`: plasma temperature [eV] \\
-    `HP0`: scale height of the plasma sheet [m]
-    """
-
-    if year == 2014:
-        DOY1422 = north_doy14
-
-    elif year == 2022:
-        DOY1422 = north_doy14
-
-    estimations = np.zeros((3, IMG_LEN))
-    moons30_arrA = np.zeros(IMG_LEN)
-    eq_leadangleA = np.zeros(IMG_LEN)
-    NN = 0     # end index of images of the doy
-    for i in range(len(DOY1422)):
-        data_arr = np.loadtxt(
-            'data/red3_leadangle/EUROPA/20'+DOY1422[i]+'_eq.txt')
-        # moon s3 longitude [deg]
-        moons30_arrA[NN:NN+data_arr.shape[1]] = data_arr[0, :]
-        # observed lead angle [deg]
-        eq_leadangleA[NN:NN+data_arr.shape[1]] = data_arr[1, :]
-
-        NN += data_arr.shape[1]
-
-    # 並列計算用 変数リスト(zip)
-    # np.arrayは不可。ここが1次元なのでpoolの結果も1次元。
-    args = list(zip(
-        RHO0*np.ones(IMG_LEN),
-        HP0*np.ones(IMG_LEN),
-        moons30_arrA))
-
-    start = time.time()
-    with Pool(processes=45) as pool:
-        result_list = list(pool.starmap(calc, args))
-    tau = np.array(result_list)         # [sec]
-    print(str(II)+' '+str(JJ)+' time', time.time()-start)
-
-    leadangle_est = np.degrees(OMGR*tau)  # [deg]
-
-    # moon s3 longitude [deg]
-    estimations[0, :] = moons30_arrA
-
-    # observed lead angle [deg]
-    estimations[1, :] = eq_leadangleA
-
-    # estimated lead angle [deg]
-    estimations[2, :] = leadangle_est
-
-    # CHI SQUARE VALUE
-    chi2 = np.sum(
-        ((estimations[1, :]-estimations[2, :])**2)/(estimations[2, :]))
-
-    # PLOT
-    LAplot(DOY1422, estimations, RHO0, Ti0, chi2, II, JJ)
-
-    return chi2
-
-
 def main2(RHO0: float, Ti0: float, HP0: float, II: int, JJ: int):
     """
     `RHO0`: plasma density at the equator [amu cm-3] \\
@@ -496,54 +396,12 @@ def main2(RHO0: float, Ti0: float, HP0: float, II: int, JJ: int):
     `HP0`: scale height of the plasma sheet [m]
     """
 
-    if year == 2014:
-        DOY1422 = north_doy14
-        img_cut = [[7, 7, 7, 7, 6, 6, 6, 6, 5],
-                   [6, 6, 6, 6, 5, 6, 6, 6, 6, 6, 7],
-                   [6, 6, 5, 6, 6, 6]]
-        cut_idx = [[0, 7, 14, 21, 28, 34, 40, 46, 52],
-                   [0, 6, 12, 18, 24, 29, 35, 41, 47, 53, 59],
-                   [0, 6, 12, 17, 23, 29]]
-        ests = np.zeros((4, 26))
-        la_err = np.array([1.0614052546455, 1.1145213015136, 0.8732066510795])
-
-    elif year == 2022:
-        DOY1422 = north_doy22
-        img_cut = [[10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9],
-                   [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 9]]
-        cut_idx = [[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140],
-                   [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 209]]
-        ests = np.zeros((4, 37))
-        la_err = np.array([1.0478863038047, 0.8994575700965])
-
-    elif year == 202218509:
-        DOY1422 = ['22/185_v09R']
-        img_cut = [[7, 7, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]]
-        cut_idx = [[0, 7, 14, 20, 26, 32, 38, 44, 50, 56, 62, 68, 74]]
-        ests = np.zeros((4, 13))
-        la_err = np.array([0.6379928352107])
-
-    elif year == 2022185:
-        DOY1422 = ['22/185_v09_MAW_R']
-        img_cut = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
-        cut_idx = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-                    10, 11, 12, 13, 14, 15, 16, 17, 18]]
-        ests = np.zeros((4, 19))
-        la_err = np.array([0.6379928352107])
-
-    elif year == 202231019:
-        DOY1422 = ['22/310_v19R']
-        img_cut = [6, 6, 6, 6, 6, 5]
-        cut_idx = [[0, 6, 12, 18, 24, 30]]
-        ests = np.zeros((4, 6))
-        la_err = np.array([0.56611511426765])
-
-    elif year == 202234923:
-        DOY1422 = ['22/349_v23R']
-        img_cut = [6, 6, 6, 6, 6, 5]
-        cut_idx = [[0, 6, 12, 18, 24, 30]]
-        ests = np.zeros((4, 6))
-        la_err = np.array([0.6325058969635])
+    # 北半球
+    DOY1422 = ['22/185_v09R']   # total 80
+    img_cut = [[7, 7, 7, 7, 7, 7, 7, 7, 6, 6, 6, 6]]
+    cut_idx = [[0, 7, 14, 21, 28, 35, 42, 49, 56, 62, 68, 74]]
+    ests = np.zeros((4, 12))
+    la_err = np.array([0.6379928352107])
 
     NN = 0     # end index of images of the doy
     for i in range(len(DOY1422)):
@@ -572,11 +430,11 @@ def main2(RHO0: float, Ti0: float, HP0: float, II: int, JJ: int):
     args = list(zip(
         RHO0*np.ones(ests.shape[1]),
         HP0*np.ones(ests.shape[1]),
-        ests[0, :]))
+        ests[0, :]-ests[1, :]))
 
     start = time.time()
-    with Pool(processes=10) as pool:
-        result_list = list(pool.starmap(calc, args))
+    with Pool(processes=7) as pool:
+        result_list = list(pool.starmap(calcN, args))
     tau = np.array(result_list)         # [sec]
     print(str(II)+' '+str(JJ)+' time', time.time()-start)
 
@@ -588,38 +446,13 @@ def main2(RHO0: float, Ti0: float, HP0: float, II: int, JJ: int):
     # CHI SQUARE VALUE
     chi2 = np.sum(((ests[1, :]-ests[2, :])/ests[3, :])**2)
 
-    # PLOT
-    LAplot(DOY1422, ests, RHO0, Ti0, chi2, II, JJ)
-
-    return chi2
-
-
-def main3(RHO0: float, Ti0: float, II: int, JJ: int):
-    """
-    `RHO0`: plasma density at the equator [amu cm-3] \\
-    `Ti0`: plasma temperature [eV] \\
-    `HP0`: scale height of the plasma sheet [m]
-    """
-
-    if year == 2014:
-        DOY1422 = north_doy14
-        img_cut = [[5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4],
-                   [5, 5, 5, 5, 5, 4, 6, 6, 5, 5, 5, 5, 5],
-                   [5, 4, 4, 4, 5, 5, 4, 4]]
-        cut_idx = [[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 49, 53],
-                   [0, 5, 10, 15, 20, 24, 30, 36, 41, 46, 51, 56, 61],
-                   [0, 5, 9, 13, 17, 22, 27, 31]]
-        ests = np.zeros((4, 33))
-        la_err = np.array([1.0614052546455, 1.1145213015136, 0.8732066510795])
-
-    elif year == 2022:
-        DOY1422 = north_doy22
-        img_cut = [[10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9],
-                   [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 9]]
-        cut_idx = [[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140],
-                   [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 209]]
-        ests = np.zeros((4, 37))
-        la_err = np.array([1.0478863038047, 0.8994575700965])
+    # 南半球
+    DOY1422 = ['22/185_v09_MAW_R']
+    img_cut = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+    cut_idx = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+                10, 11, 12, 13, 14, 15, 16, 17, 18]]
+    ests = np.zeros((4, 19))
+    la_err = np.array([0.6379928352107])
 
     NN = 0     # end index of images of the doy
     for i in range(len(DOY1422)):
@@ -642,32 +475,17 @@ def main3(RHO0: float, Ti0: float, II: int, JJ: int):
         ests[3, NN:NN+params_arr.shape[1]] = params_arr[2, :]
 
         NN += params_arr.shape[1]
-
-    # スケールハイトの計算
-    n0_SII, H_SII, n0_SIII, H_SIII, n0_SIV, H_SIV, n0_OII, H_OII, n0_OIII, H_OIII, n0_HII, H_HII = scaleheight(
-        RHO0, Ti0, Te0=20)
 
     # 並列計算用 変数リスト(zip)
     # np.arrayは不可。ここが1次元なのでpoolの結果も1次元。
     args = list(zip(
         RHO0*np.ones(ests.shape[1]),
-        n0_SII*np.ones(ests.shape[1]),
-        H_SII*np.ones(ests.shape[1]),
-        n0_SIII*np.ones(ests.shape[1]),
-        H_SIII*np.ones(ests.shape[1]),
-        n0_SIV*np.ones(ests.shape[1]),
-        H_SIV*np.ones(ests.shape[1]),
-        n0_OII*np.ones(ests.shape[1]),
-        H_OII*np.ones(ests.shape[1]),
-        n0_OIII*np.ones(ests.shape[1]),
-        H_OIII*np.ones(ests.shape[1]),
-        n0_HII*np.ones(ests.shape[1]),
-        H_HII*np.ones(ests.shape[1]),
-        ests[0, :]))
+        HP0*np.ones(ests.shape[1]),
+        ests[0, :]-ests[1, :]))
 
     start = time.time()
-    with Pool(processes=17) as pool:
-        result_list = list(pool.starmap(calc3, args))
+    with Pool(processes=9) as pool:
+        result_list = list(pool.starmap(calcS, args))
     tau = np.array(result_list)         # [sec]
     print(str(II)+' '+str(JJ)+' time', time.time()-start)
 
@@ -677,101 +495,7 @@ def main3(RHO0: float, Ti0: float, II: int, JJ: int):
     ests[2, :] = leadangle_est
 
     # CHI SQUARE VALUE
-    chi2 = np.sum(((ests[1, :]-ests[2, :])/ests[3, :])**2)
-
-    # PLOT
-    LAplot(DOY1422, ests, RHO0, Ti0, chi2, II, JJ)
-
-    return chi2
-
-
-def main4(RHO0: float, Ti0: float, II: int, JJ: int):
-    """
-    `RHO0`: plasma density at the equator [amu cm-3] \\
-    `Ti0`: plasma temperature [eV] \\
-    `HP0`: scale height of the plasma sheet [m]
-    """
-
-    if year == 2014:
-        DOY1422 = north_doy14
-        img_cut = [[5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4],
-                   [5, 5, 5, 5, 5, 4, 6, 6, 5, 5, 5, 5, 5],
-                   [5, 4, 4, 4, 5, 5, 4, 4]]
-        cut_idx = [[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 49, 53],
-                   [0, 5, 10, 15, 20, 24, 30, 36, 41, 46, 51, 56, 61],
-                   [0, 5, 9, 13, 17, 22, 27, 31]]
-        ests = np.zeros((4, 33))
-        la_err = np.array([1.0614052546455, 1.1145213015136, 0.8732066510795])
-
-    elif year == 2022:
-        DOY1422 = north_doy22
-        img_cut = [[10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9],
-                   [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 9]]
-        cut_idx = [[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140],
-                   [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 209]]
-        ests = np.zeros((4, 37))
-        la_err = np.array([1.0478863038047, 0.8994575700965])
-
-    NN = 0     # end index of images of the doy
-    for i in range(len(DOY1422)):
-        data_arr = np.loadtxt(
-            'data/red3_leadangle/EUROPA/20'+DOY1422[i]+'_eq.txt')
-        params_arr = np.zeros((3, len(cut_idx[i])))
-        for j in range(len(cut_idx[i])):
-            moons30_arr = data_arr[0, cut_idx[i]
-                                   [j]:cut_idx[i][j]+img_cut[i][j]]
-            eq_leadangle = data_arr[1, cut_idx[i]
-                                    [j]:cut_idx[i][j]+img_cut[i][j]]
-            params_arr[0, j] = np.average(moons30_arr)      # 平均値 [deg]
-            params_arr[1, j] = np.average(eq_leadangle)     # 平均値 [deg]
-            params_arr[2, j] = la_err[i]                    # Wlong err [deg]
-        # moon s3 longitude [deg]
-        ests[0, NN:NN+params_arr.shape[1]] = params_arr[0, :]
-        # observed lead angle [deg]
-        ests[1, NN:NN+params_arr.shape[1]] = params_arr[1, :]
-        # error [deg]
-        ests[3, NN:NN+params_arr.shape[1]] = params_arr[2, :]
-
-        NN += params_arr.shape[1]
-
-    # スケールハイトの計算
-    Ti_SII, Ti_SIII, Ti_SIV, Ti_OII, Ti_OIII, Ti_HII = ion_temp(
-        RHO0, Ti0, Te0=20)
-
-    # 数密度の計算
-    n0_SII, n0_SIII, n0_SIV, n0_OII, n0_OIII, n0_HII = eq_density(RHO0)
-
-    # 並列計算用 変数リスト(zip)
-    # np.arrayは不可。ここが1次元なのでpoolの結果も1次元。
-    args = list(zip(
-        Ti0*np.ones(ests.shape[1]),
-        n0_SII*np.ones(ests.shape[1]),
-        Ti_SII*np.ones(ests.shape[1]),
-        n0_SIII*np.ones(ests.shape[1]),
-        Ti_SIII*np.ones(ests.shape[1]),
-        n0_SIV*np.ones(ests.shape[1]),
-        Ti_SIV*np.ones(ests.shape[1]),
-        n0_OII*np.ones(ests.shape[1]),
-        Ti_OII*np.ones(ests.shape[1]),
-        n0_OIII*np.ones(ests.shape[1]),
-        Ti_OIII*np.ones(ests.shape[1]),
-        n0_HII*np.ones(ests.shape[1]),
-        Ti_HII*np.ones(ests.shape[1]),
-        ests[0, :]))
-
-    start = time.time()
-    with Pool(processes=20) as pool:
-        result_list = list(pool.starmap(calc4, args))
-    tau = np.array(result_list)         # [sec]
-    print(str(II)+' '+str(JJ)+' time', time.time()-start)
-
-    leadangle_est = np.degrees(OMGR*tau)  # [deg]
-
-    # estimated lead angle [deg]
-    ests[2, :] = leadangle_est
-
-    # CHI SQUARE VALUE
-    chi2 = np.sum(((ests[1, :]-ests[2, :])/ests[3, :])**2)
+    chi2 += np.sum(((ests[1, :]-ests[2, :])/ests[3, :])**2)
 
     # PLOT
     LAplot(DOY1422, ests, RHO0, Ti0, chi2, II, JJ)
@@ -782,10 +506,10 @@ def main4(RHO0: float, Ti0: float, II: int, JJ: int):
 # %% EXECUTE
 if __name__ == '__main__':
     # Parameters
-    RHO0_len = 70
-    Ti0_len = 50
-    # RHO0_len = 30
-    # Ti0_len = 20
+    # RHO0_len = 70
+    # Ti0_len = 50
+    RHO0_len = 60
+    Ti0_len = 40
     RHO0 = np.linspace(np.log(300), np.log(6000), RHO0_len)
     RHO0 = np.linspace(np.log(500), np.log(9000), RHO0_len)
     RHO0 = np.exp(RHO0)
@@ -828,16 +552,9 @@ if __name__ == '__main__':
         #     0
         # break
         for j in range(RHO0_len):
-            """chi2_arr[i, j] = main(RHO0[i, j], Ti0[i, j],
-                                  HP_arr[i, j], IMG_LEN,
-                                  i, j, year)"""
             chi2_arr[i, j] = main2(RHO0[i, j], Ti0[i, j],
                                    HP_arr[i, j],
                                    i, j)
-            """chi2_arr[i, j] = main3(RHO0[i, j], Ti0[i, j],
-                                   i, j)"""
-            """chi2_arr[i, j] = main4(RHO0[i, j], Ti0[i, j],
-                                   i, j)"""
     print('total time', time.time()-start)
 
     print(chi2_arr)
