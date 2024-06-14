@@ -36,7 +36,7 @@ cud4bs = ['#FFCABF', '#FFFF80', '#D8F255', '#BFE4FF',
 # %% Switch
 hem = 'North'       # 'North' or 'South'
 year = 2022         # 2014, 2022, 202218509, 202231019, 202234923
-exname = '2022_R4'
+exname = '2022_R4_12B'
 
 
 # %% matplotlib フォント設定
@@ -107,6 +107,8 @@ ne_2 = 158           # 電子数密度 [cm-3] (Bagenal+2015)
 ne_3 = 290           # 電子数密度 [cm-3] (Bagenal+2015)
 
 Ai_1 = 18            # 平均イオン原子量 (Bagenal+2015)
+# 平均イオン原子量 (Bagenal+2015) お試し ==============================
+Ai_1 = 12
 
 Hp0 = 0.64*RJ        # H0 [m] (Bagenal&Delamere2011)
 

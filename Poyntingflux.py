@@ -1,4 +1,4 @@
-""" poyntingflux.py
+""" Poyntingflux.py
 
 Created on Apr 18, 2024
 @author: Shin Satoh
@@ -156,7 +156,7 @@ rho1 = rho*np.exp(-(rvec1[2]/H)**2)
 S = 2*np.pi*(R_eff**2)*((a_bar*u)**2)*B*np.sqrt(rho1/MU0)
 
 # Plot
-fig, ax = plt.subplots(dpi=200)
+fig, ax = plt.subplots(dpi=100)
 fsize = 19
 ax.tick_params(axis='both', labelsize=fsize)
 ax.set_title('Poynting flux', fontsize=fsize, weight='bold')
@@ -165,7 +165,7 @@ ax.set_ylabel('Poynting flux [GW]', fontsize=fsize)
 ax.plot(np.degrees(S3wlon), S*1E-9)
 
 fig.tight_layout()
-fig.savefig('img/Pynt.png')
+fig.savefig('img/Pynt_r.png')
 plt.show()
 
 np.savetxt('data/Poyntingflux/PY_2022_R4.txt',

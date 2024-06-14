@@ -27,9 +27,9 @@ from TScmap import TScmap
 import time
 
 # %% Switch
-hem = 'South'       # 'North' or 'South'
-year = 2022185      # 2014, 2022, 202218509, 202231019, 202234923
-exname = '2022_185MAW'
+hem = 'North'       # 'North' or 'South'
+year = 2014         # 2014, 2022, 202218509, 202231019, 202234923
+exname = '2014_R4_12'
 
 
 # %% matplotlib フォント設定
@@ -106,6 +106,7 @@ Ai_S = 32.0          # 硫黄 [原子量]
 Ai_1 = 18            # 平均イオン原子量 (Bagenal+2015)
 Ai_2 = 18            # 平均イオン原子量 (Bagenal+2015)
 Ai_3 = 18            # 平均イオン原子量 (Bagenal+2015)
+Ai_1 = 12            # お試し 平均イオン原子量 (Bagenal+2015) #########################
 
 Ti_1 = 340           # 平均イオン温度 [eV] (Bagenal+2015)
 Ti_2 = 88            # 平均イオン温度 [eV] (Bagenal+2015)
